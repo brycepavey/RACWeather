@@ -25,8 +25,22 @@ class ViewController: UIViewController {
     }
     
     @objc func fetchWeather() {
+        fetchMelb()
+        fetchSyd()
+        fetchHob()
+    }
+    
+    @objc func fetchMelb() {
         melbObserver.sendNext(self.getRandomWeather())
+        print("\n")
+    }
+    
+    @objc func fetchSyd() {
         sydObserver.sendNext(self.getRandomWeather())
+        print("\n")
+    }
+    
+    @objc func fetchHob() {
         hobObserver.sendNext(self.getRandomWeather())
         print("\n")
     }
@@ -68,8 +82,9 @@ class ViewController: UIViewController {
         
         fetchWeather()
         
-        NSTimer.scheduledTimerWithTimeInterval(2, target: self, selector: "fetchWeather", userInfo: nil, repeats: true)
-        
+        NSTimer.scheduledTimerWithTimeInterval(Double(arc4random_uniform(UInt32(5))), target: self, selector: "fetchMelb", userInfo: nil, repeats: true)
+        NSTimer.scheduledTimerWithTimeInterval(Double(arc4random_uniform(UInt32(5))), target: self, selector: "fetchSyd", userInfo: nil, repeats: true)
+        NSTimer.scheduledTimerWithTimeInterval(Double(arc4random_uniform(UInt32(5))), target: self, selector: "fetchHob", userInfo: nil, repeats: true)
     }
     
     override func didReceiveMemoryWarning() {
