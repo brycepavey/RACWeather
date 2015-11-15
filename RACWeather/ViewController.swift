@@ -14,7 +14,8 @@ class ViewController: UIViewController {
     private let (melbProducer, melbObserver) = SignalProducer<String, NoError>.buffer(1)
     private let (sydProducer, sydObserver) = SignalProducer<String, NoError>.buffer(1)
     private let (hobProducer, hobObserver) = SignalProducer<String, NoError>.buffer(1)
-
+    private let (allProducer, allObserver) = SignalProducer<(), NoError>.buffer(1)
+    
     @IBOutlet weak var melbConditions: UILabel!
     @IBOutlet weak var sydConditions: UILabel!
     @IBOutlet weak var hobConditions: UILabel!
@@ -26,65 +27,55 @@ class ViewController: UIViewController {
     
     @objc func fetchWeather() {
         fetchMelb()
-        fetchSyd()
-        fetchHob()
     }
     
     @objc func fetchMelb() {
         melbObserver.sendNext(self.getRandomWeather())
-        print("\n")
+    }
+
+    
+    @objc func fetchAllWeather() {
+        allObserver
+            .sendNext()
     }
     
-    @objc func fetchSyd() {
-        sydObserver.sendNext(self.getRandomWeather())
-        print("\n")
-    }
-    
-    @objc func fetchHob() {
-        hobObserver.sendNext(self.getRandomWeather())
-        print("\n")
+    func allWeatherProcessor(message: String) {
+        print("sampled: \(message)")
+
     }
     
     // Melbourne
     func melbWeatherProcessor(message: String) {
         melbConditions.text = message
-        print(melbConditions.text)
+        print("set weather: \(message)")
     }
-    
-    // Sydney
-    func sydWeatherProcessor(message: String) {
-        sydConditions.text = message
-        print(sydConditions.text)
-    }
-    
-    // Hobart
-    func hobWeatherProcessor(message: String) {
-        hobConditions.text = message
-        print(hobConditions.text)
-    }
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         weather = Weather()
+
+        let sampledProducer = melbProducer.sampleOn(allProducer)
+        sampledProducer
+            .on(next: allWeatherProcessor)
+            .start()
+        
+        allProducer
+            .start()
         
         melbProducer
             .skipRepeats()
-            .startWithNext { self.melbWeatherProcessor($0) }
+            .startWithNext(melbWeatherProcessor)
         
-        sydProducer
-            .skipRepeats()
-            .startWithNext { self.sydWeatherProcessor($0) }
+        fetchAllWeather()
         
-        hobProducer
-            .skipRepeats()
-            .startWithNext { self.hobWeatherProcessor($0) }
-        
-        fetchWeather()
-        
-        NSTimer.scheduledTimerWithTimeInterval(Double(arc4random_uniform(UInt32(5))), target: self, selector: "fetchMelb", userInfo: nil, repeats: true)
-        NSTimer.scheduledTimerWithTimeInterval(Double(arc4random_uniform(UInt32(5))), target: self, selector: "fetchSyd", userInfo: nil, repeats: true)
-        NSTimer.scheduledTimerWithTimeInterval(Double(arc4random_uniform(UInt32(5))), target: self, selector: "fetchHob", userInfo: nil, repeats: true)
+        // Timers for cities signal producers
+        NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "fetchMelb", userInfo: nil, repeats: true)
+
+        // Timer for aggregating the latest results
+        NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "fetchAllWeather", userInfo: nil, repeats: true)
+
     }
     
     override func didReceiveMemoryWarning() {
