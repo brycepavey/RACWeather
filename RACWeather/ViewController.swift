@@ -73,9 +73,9 @@ class ViewController: UIViewController {
             .start()
         
         let sampledProducer = melbProducer
-            .combineLatestWith(sydProducer)
-            .combineLatestWith(hobProducer)
-            .sampleOn(allProducer)
+                                .combineLatestWith(sydProducer)
+                                .combineLatestWith(hobProducer)
+                                .sampleOn(allProducer)
         
         sampledProducer
             .on(next: allWeatherProcessor)
